@@ -1,0 +1,35 @@
+name: AI Blogger Agent
+on:
+  schedule:
+    - cron: '0 12 * * 1'  # هر دوشنبه ساعت 12:00 (به وقت UTC)
+  workflow_dispatch:  # امکان اجرای دستی
+
+jobs:
+  run-blogger:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.10'
+          
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+        
+      - name: Run Blogger Agent
+        run: python blogger_agent.py
+        
+      - name: Notify on failure
+        if: failure()
+        uses: actions/github-script@v6
+        with:
+          script: |
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: '❌ اجرای Agent وبلاگ با خطا مواجه شد!'
+            })
